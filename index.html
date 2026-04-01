@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Report — Europe</title>
+    <style>
+        :root {
+            --m-darkest: #4a0030;
+            --m-dark:    #880e4f;
+            --m-mid:     #c2185b;
+            --m-light:   #e91e63;
+            --m-bright:  #ff4081;
+            --m-pale:    #f48fb1;
+            --m-whisper: #fce4ec;
+            --m-glow:    rgba(194, 24, 91, 0.15);
+            --m-border:  rgba(233, 30, 99, 0.18);
+            --text:      #1a1a2e;
+            --muted:     #6b7280;
+            --radius:    16px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--m-whisper);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ═══════════════ HEADER ═══════════════ */
+        .site-header {
+            background: linear-gradient(160deg,
+                var(--m-darkest) 0%,
+                var(--m-dark)    25%,
+                var(--m-mid)     55%,
+                var(--m-bright)  100%
+            );
+            text-align: center;
+            padding: 72px 24px 110px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .site-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 40%, rgba(255,255,255,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.04) 0%, transparent 45%);
+            pointer-events: none;
+        }
+
+        .header-inner { position: relative; z-index: 1; }
+
+        .header-title {
+            font-size: clamp(2.6rem, 7vw, 5.5rem);
+            font-weight: 900;
+            color: white;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            text-shadow: 0 3px 24px rgba(0,0,0,0.25);
+        }
+
+        .header-author {
+            margin-top: 14px;
+            font-size: clamp(1rem, 2.8vw, 1.55rem);
+            color: rgba(255,255,255,0.9);
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+
+        .header-icons {
+            margin-top: 30px;
+            font-size: 1.9rem;
+            letter-spacing: 14px;
+            opacity: 0.65;
+        }
+
+        .header-wave {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            line-height: 0;
+        }
+        .header-wave svg { display: block; width: 100%; }
+
+        /* ═══════════════ SPACER ═══════════════ */
+        .spacer { height: 48px; }
+
+        /* ═══════════════ CONTENT ═══════════════ */
+        .content-wrap {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        /* ═══════════════ TOOLBAR ═══════════════ */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 13px 20px 13px 48px;
+            border: 2px solid var(--m-border);
+            border-radius: 50px;
+            font-size: 0.97rem;
+            background: white;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .search-box input::placeholder { color: #b8b8c8; }
+        .search-box input:focus {
+            border-color: var(--m-mid);
+            box-shadow: 0 0 0 4px var(--m-glow), 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 17px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.05rem;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .counter {
+            background: linear-gradient(135deg, var(--m-dark), var(--m-light));
+            color: white;
+            padding: 9px 22px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            box-shadow: 0 3px 14px var(--m-glow);
+        }
+
+        /* ═══════════════ COUNTRY LIST ═══════════════ */
+        .countries {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .country-block {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid var(--m-border);
+            transition: box-shadow .25s, transform .25s;
+        }
+        .country-block:hover {
+            box-shadow: 0 6px 24px rgba(194,24,91,0.18);
+            transform: translateY(-1px);
+        }
+
+        .country-row {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            gap: 14px;
+            user-select: none;
+            transition: background .15s;
+        }
+        .country-row:hover { background: #fff5f9; }
+
+        .flag { font-size: 1.85rem; flex-shrink: 0; line-height: 1; }
+
+        .cname {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            flex: 1;
+        }
+
+        .csummary {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cweather { font-size: 1.5rem; line-height: 1; }
+
+        .ctemp {
+            font-size: 0.88rem;
+            color: var(--muted);
+            font-weight: 600;
+            min-width: 58px;
+            text-align: right;
+        }
+
+        .chevron {
+            color: var(--m-mid);
+            font-size: 0.8rem;
+            font-weight: 900;
+            transition: transform .3s ease;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+        .country-block.open .chevron { transform: rotate(180deg); }
+
+        /* ═══════════════ CITIES PANEL ═══════════════ */
+        .cities-outer {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows .35s ease;
+        }
+        .country-block.open .cities-outer { grid-template-rows: 1fr; }
+
+        .cities-inner {
+            overflow: hidden;
+            border-top: 1px solid var(--m-border);
+        }
+
+        .cities-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .city-col {
+            padding: 18px 16px 20px;
+            border-right: 1px solid var(--m-border);
+        }
+        .city-col:last-child { border-right: none; }
+
+        .city-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .city-name {
+            font-weight: 700;
+            font-size: 0.96rem;
+            color: var(--text);
+        }
+
+        .cap-tag {
+            background: linear-gradient(135deg, var(--m-dark), var(--m-mid));
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        .days-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .day-box {
+            flex: 1;
+            background: var(--m-whisper);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid rgba(244,143,177,0.25);
+        }
+
+        .day-lbl {
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--m-mid);
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .day-ico {
+            font-size: 1.7rem;
+            display: block;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .day-tmp {
+            font-size: 1.18rem;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .day-cnd {
+            font-size: 0.66rem;
+            color: var(--muted);
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        /* ═══════════════ EMPTY STATE ═══════════════ */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .empty .empty-ico { font-size: 3rem; margin-bottom: 12px; }
+        .empty p { font-size: 1.05rem; }
+
+        /* ═══════════════ FOOTER ═══════════════ */
+        footer {
+            background: linear-gradient(135deg, var(--m-darkest), var(--m-dark));
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 34px 24px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+        footer strong { color: white; }
+
+        /* ═══════════════ RESPONSIVE ═══════════════ */
+        @media (max-width: 680px) {
+            .cities-grid { grid-template-columns: 1fr; }
+            .city-col { border-right: none; border-bottom: 1px solid var(--m-border); }
+            .city-col:last-child { border-bottom: none; }
+        }
+        @media (max-width: 460px) {
+            .site-header { padding: 56px 20px 100px; }
+            .header-icons { font-size: 1.5rem; letter-spacing: 10px; }
+            .cname { font-size: 0.92rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-inner">
+        <h1 class="header-title">🌍 Weather Report</h1>
+        <p class="header-author">Iryna Khadzko</p>
+        <div class="header-icons">☀️ ⛅ 🌧️ ❄️ ⛈️ 🌤️ 💨</div>
+    </div>
+    <div class="header-wave">
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,30 C240,75 480,5 720,40 C960,75 1200,10 1440,38 L1440,80 L0,80 Z" fill="#fce4ec"/>
+        </svg>
+    </div>
+</header>
+
+<div class="spacer"></div>
+
+<div class="content-wrap">
+    <div class="toolbar">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search countries…" autocomplete="off">
+        </div>
+        <div class="counter" id="counter">44 countries</div>
+    </div>
+    <div class="countries" id="list"></div>
+</div>
+
+<footer>
+    <p><strong>Weather Report</strong> &nbsp;·&nbsp; <strong>Iryna Khadzko</strong> &nbsp;·&nbsp; Europe</p>
+    <p style="margin-top:5px;font-size:0.78rem;opacity:.65;">Mock weather data · 44 European countries · Temperatures in °C · April 2026</p>
+</footer>
+
+<script>
+/* ── Conditions ─────────────────────────────────────────────────────── */
+const C = {
+    sunny:         { e: "☀️",  l: "Sunny"         },
+    mostly_sunny:  { e: "🌤️", l: "Mostly Sunny"   },
+    partly_cloudy: { e: "⛅",  l: "Partly Cloudy"  },
+    cloudy:        { e: "☁️",  l: "Cloudy"         },
+    showers:       { e: "🌦️", l: "Showers"        },
+    rainy:         { e: "🌧️", l: "Rainy"          },
+    stormy:        { e: "⛈️", l: "Stormy"         },
+    snowy:         { e: "❄️",  l: "Snowy"          },
+    foggy:         { e: "🌫️", l: "Foggy"          },
+    windy:         { e: "💨",  l: "Windy"          },
+    blizzard:      { e: "🌨️", l: "Blizzard"       },
+};
+
+/* ── Data: cities[{name, cap?, w:[todayCond, todayTemp, tmrCond, tmrTemp]}] ── */
+const DATA = [
+  { country:"Albania",              flag:"🇦🇱", cities:[
+      { name:"Tirana",             cap:true, w:["sunny",18,"partly_cloudy",16] },
+      { name:"Durrës",                       w:["mostly_sunny",20,"rainy",15]  },
+      { name:"Vlorë",                        w:["sunny",21,"sunny",22]         },
+  ]},
+  { country:"Andorra",              flag:"🇦🇩", cities:[
+      { name:"Andorra la Vella",   cap:true, w:["partly_cloudy",10,"snowy",7]  },
+      { name:"Escaldes",                     w:["partly_cloudy",11,"snowy",8]  },
+      { name:"Encamp",                       w:["cloudy",9,"snowy",6]          },
+  ]},
+  { country:"Austria",              flag:"🇦🇹", cities:[
+      { name:"Vienna",             cap:true, w:["partly_cloudy",14,"sunny",16] },
+      { name:"Graz",                         w:["sunny",16,"mostly_sunny",17]  },
+      { name:"Linz",                         w:["cloudy",12,"rainy",11]        },
+  ]},
+  { country:"Belarus",              flag:"🇧🇾", cities:[
+      { name:"Minsk",              cap:true, w:["cloudy",8,"rainy",7]          },
+      { name:"Gomel",                        w:["partly_cloudy",10,"cloudy",9] },
+      { name:"Brest",                        w:["rainy",9,"cloudy",8]          },
+  ]},
+  { country:"Belgium",              flag:"🇧🇪", cities:[
+      { name:"Brussels",           cap:true, w:["rainy",11,"cloudy",10]        },
+      { name:"Antwerp",                      w:["cloudy",12,"showers",10]      },
+      { name:"Ghent",                        w:["showers",11,"rainy",9]        },
+  ]},
+  { country:"Bosnia & Herzegovina", flag:"🇧🇦", cities:[
+      { name:"Sarajevo",           cap:true, w:["partly_cloudy",13,"rainy",11]       },
+      { name:"Banja Luka",                   w:["mostly_sunny",15,"partly_cloudy",14]},
+      { name:"Tuzla",                        w:["cloudy",12,"showers",11]            },
+  ]},
+  { country:"Bulgaria",             flag:"🇧🇬", cities:[
+      { name:"Sofia",              cap:true, w:["sunny",16,"partly_cloudy",15] },
+      { name:"Plovdiv",                      w:["sunny",18,"sunny",19]         },
+      { name:"Varna",                        w:["partly_cloudy",15,"rainy",14] },
+  ]},
+  { country:"Croatia",              flag:"🇭🇷", cities:[
+      { name:"Zagreb",             cap:true, w:["partly_cloudy",15,"sunny",17]       },
+      { name:"Split",                        w:["sunny",19,"sunny",20]               },
+      { name:"Rijeka",                       w:["mostly_sunny",16,"partly_cloudy",15]},
+  ]},
+  { country:"Cyprus",               flag:"🇨🇾", cities:[
+      { name:"Nicosia",            cap:true, w:["sunny",24,"sunny",25]        },
+      { name:"Limassol",                     w:["sunny",23,"mostly_sunny",23] },
+      { name:"Larnaca",                      w:["mostly_sunny",22,"sunny",24] },
+  ]},
+  { country:"Czech Republic",       flag:"🇨🇿", cities:[
+      { name:"Prague",             cap:true, w:["cloudy",11,"showers",10]       },
+      { name:"Brno",                         w:["partly_cloudy",13,"cloudy",11] },
+      { name:"Ostrava",                      w:["rainy",9,"cloudy",10]          },
+  ]},
+  { country:"Denmark",              flag:"🇩🇰", cities:[
+      { name:"Copenhagen",         cap:true, w:["windy",9,"rainy",8]  },
+      { name:"Aarhus",                       w:["cloudy",8,"windy",7] },
+      { name:"Odense",                       w:["showers",9,"rainy",8]},
+  ]},
+  { country:"Estonia",              flag:"🇪🇪", cities:[
+      { name:"Tallinn",            cap:true, w:["cloudy",6,"rainy",5]          },
+      { name:"Tartu",                        w:["partly_cloudy",7,"cloudy",6]  },
+      { name:"Narva",                        w:["snowy",3,"cloudy",5]          },
+  ]},
+  { country:"Finland",              flag:"🇫🇮", cities:[
+      { name:"Helsinki",           cap:true, w:["partly_cloudy",7,"cloudy",5]  },
+      { name:"Espoo",                        w:["cloudy",6,"rainy",5]          },
+      { name:"Tampere",                      w:["snowy",3,"partly_cloudy",4]   },
+  ]},
+  { country:"France",               flag:"🇫🇷", cities:[
+      { name:"Paris",              cap:true, w:["partly_cloudy",14,"rainy",12]  },
+      { name:"Marseille",                    w:["sunny",20,"sunny",21]          },
+      { name:"Lyon",                         w:["partly_cloudy",15,"showers",13]},
+  ]},
+  { country:"Germany",              flag:"🇩🇪", cities:[
+      { name:"Berlin",             cap:true, w:["cloudy",11,"showers",10]      },
+      { name:"Hamburg",                      w:["rainy",10,"windy",9]          },
+      { name:"Munich",                       w:["partly_cloudy",13,"sunny",15] },
+  ]},
+  { country:"Greece",               flag:"🇬🇷", cities:[
+      { name:"Athens",             cap:true, w:["sunny",21,"sunny",22]                    },
+      { name:"Thessaloniki",                 w:["mostly_sunny",19,"partly_cloudy",18]      },
+      { name:"Patras",                       w:["sunny",20,"mostly_sunny",21]              },
+  ]},
+  { country:"Hungary",              flag:"🇭🇺", cities:[
+      { name:"Budapest",           cap:true, w:["partly_cloudy",14,"sunny",16] },
+      { name:"Debrecen",                     w:["sunny",15,"partly_cloudy",15] },
+      { name:"Pécs",                         w:["mostly_sunny",16,"sunny",17]  },
+  ]},
+  { country:"Iceland",              flag:"🇮🇸", cities:[
+      { name:"Reykjavík",          cap:true, w:["windy",4,"stormy",2]   },
+      { name:"Akureyri",                     w:["snowy",1,"blizzard",-1] },
+      { name:"Kópavogur",                    w:["cloudy",5,"windy",3]   },
+  ]},
+  { country:"Ireland",              flag:"🇮🇪", cities:[
+      { name:"Dublin",             cap:true, w:["rainy",10,"showers",9]         },
+      { name:"Cork",                         w:["showers",11,"rainy",10]        },
+      { name:"Limerick",                     w:["cloudy",11,"partly_cloudy",12] },
+  ]},
+  { country:"Italy",                flag:"🇮🇹", cities:[
+      { name:"Rome",               cap:true, w:["sunny",19,"mostly_sunny",18] },
+      { name:"Milan",                        w:["partly_cloudy",16,"rainy",14]},
+      { name:"Naples",                       w:["sunny",20,"sunny",21]        },
+  ]},
+  { country:"Kosovo",               flag:"🇽🇰", cities:[
+      { name:"Pristina",           cap:true, w:["partly_cloudy",14,"rainy",12]       },
+      { name:"Prizren",                      w:["mostly_sunny",15,"partly_cloudy",14]},
+      { name:"Peja",                         w:["cloudy",13,"showers",11]            },
+  ]},
+  { country:"Latvia",               flag:"🇱🇻", cities:[
+      { name:"Riga",               cap:true, w:["cloudy",7,"rainy",6]         },
+      { name:"Daugavpils",                   w:["partly_cloudy",8,"cloudy",7] },
+      { name:"Liepāja",                      w:["windy",7,"rainy",6]          },
+  ]},
+  { country:"Liechtenstein",        flag:"🇱🇮", cities:[
+      { name:"Vaduz",              cap:true, w:["partly_cloudy",12,"sunny",14]  },
+      { name:"Schaan",                       w:["sunny",13,"partly_cloudy",13]  },
+      { name:"Balzers",                      w:["mostly_sunny",13,"sunny",15]   },
+  ]},
+  { country:"Lithuania",            flag:"🇱🇹", cities:[
+      { name:"Vilnius",            cap:true, w:["partly_cloudy",9,"showers",8] },
+      { name:"Kaunas",                       w:["cloudy",8,"rainy",7]          },
+      { name:"Klaipėda",                     w:["windy",8,"cloudy",7]          },
+  ]},
+  { country:"Luxembourg",           flag:"🇱🇺", cities:[
+      { name:"Luxembourg City",    cap:true, w:["showers",12,"rainy",10]  },
+      { name:"Esch-sur-Alzette",             w:["cloudy",11,"showers",10] },
+      { name:"Differdange",                  w:["rainy",11,"cloudy",11]   },
+  ]},
+  { country:"Malta",                flag:"🇲🇹", cities:[
+      { name:"Valletta",           cap:true, w:["sunny",22,"mostly_sunny",22] },
+      { name:"Birkirkara",                   w:["mostly_sunny",21,"sunny",22] },
+      { name:"Mosta",                        w:["sunny",22,"sunny",23]        },
+  ]},
+  { country:"Moldova",              flag:"🇲🇩", cities:[
+      { name:"Chișinău",           cap:true, w:["partly_cloudy",14,"rainy",12]          },
+      { name:"Bălți",                        w:["cloudy",12,"rainy",11]                 },
+      { name:"Tiraspol",                     w:["partly_cloudy",15,"partly_cloudy",14]  },
+  ]},
+  { country:"Monaco",               flag:"🇲🇨", cities:[
+      { name:"Monaco",             cap:true, w:["sunny",19,"sunny",20]         },
+      { name:"Monte Carlo",                  w:["mostly_sunny",20,"sunny",20]  },
+      { name:"La Condamine",                 w:["sunny",19,"mostly_sunny",20]  },
+  ]},
+  { country:"Montenegro",           flag:"🇲🇪", cities:[
+      { name:"Podgorica",          cap:true, w:["sunny",18,"partly_cloudy",17] },
+      { name:"Nikšić",                       w:["partly_cloudy",15,"rainy",13] },
+      { name:"Bar",                          w:["sunny",19,"sunny",20]         },
+  ]},
+  { country:"Netherlands",          flag:"🇳🇱", cities:[
+      { name:"Amsterdam",          cap:true, w:["showers",12,"cloudy",10] },
+      { name:"Rotterdam",                    w:["cloudy",12,"rainy",10]   },
+      { name:"The Hague",                    w:["rainy",11,"showers",10]  },
+  ]},
+  { country:"North Macedonia",      flag:"🇲🇰", cities:[
+      { name:"Skopje",             cap:true, w:["mostly_sunny",17,"sunny",18]           },
+      { name:"Bitola",                       w:["partly_cloudy",15,"partly_cloudy",15]  },
+      { name:"Kumanovo",                     w:["sunny",17,"mostly_sunny",17]           },
+  ]},
+  { country:"Norway",               flag:"🇳🇴", cities:[
+      { name:"Oslo",               cap:true, w:["partly_cloudy",8,"showers",6] },
+      { name:"Bergen",                       w:["rainy",7,"stormy",5]          },
+      { name:"Trondheim",                    w:["snowy",3,"partly_cloudy",4]   },
+  ]},
+  { country:"Poland",               flag:"🇵🇱", cities:[
+      { name:"Warsaw",             cap:true, w:["partly_cloudy",12,"rainy",10]       },
+      { name:"Kraków",                       w:["mostly_sunny",13,"partly_cloudy",12]},
+      { name:"Wrocław",                      w:["cloudy",11,"showers",10]            },
+  ]},
+  { country:"Portugal",             flag:"🇵🇹", cities:[
+      { name:"Lisbon",             cap:true, w:["sunny",20,"mostly_sunny",19]       },
+      { name:"Porto",                        w:["partly_cloudy",17,"rainy",15]      },
+      { name:"Braga",                        w:["mostly_sunny",18,"partly_cloudy",16]},
+  ]},
+  { country:"Romania",              flag:"🇷🇴", cities:[
+      { name:"Bucharest",          cap:true, w:["sunny",17,"partly_cloudy",15] },
+      { name:"Cluj-Napoca",                  w:["partly_cloudy",14,"rainy",12] },
+      { name:"Timișoara",                    w:["mostly_sunny",16,"sunny",17]  },
+  ]},
+  { country:"San Marino",           flag:"🇸🇲", cities:[
+      { name:"San Marino",         cap:true, w:["sunny",17,"mostly_sunny",16]        },
+      { name:"Serravalle",                   w:["mostly_sunny",16,"sunny",17]        },
+      { name:"Borgo Maggiore",               w:["partly_cloudy",15,"partly_cloudy",15]},
+  ]},
+  { country:"Serbia",               flag:"🇷🇸", cities:[
+      { name:"Belgrade",           cap:true, w:["partly_cloudy",16,"sunny",17]       },
+      { name:"Novi Sad",                     w:["mostly_sunny",16,"partly_cloudy",16]},
+      { name:"Niš",                          w:["sunny",17,"sunny",18]               },
+  ]},
+  { country:"Slovakia",             flag:"🇸🇰", cities:[
+      { name:"Bratislava",         cap:true, w:["partly_cloudy",14,"sunny",15] },
+      { name:"Košice",                       w:["cloudy",11,"showers",10]      },
+      { name:"Prešov",                       w:["showers",10,"cloudy",10]      },
+  ]},
+  { country:"Slovenia",             flag:"🇸🇮", cities:[
+      { name:"Ljubljana",          cap:true, w:["partly_cloudy",14,"showers",12]     },
+      { name:"Maribor",                      w:["mostly_sunny",15,"partly_cloudy",14]},
+      { name:"Celje",                        w:["sunny",15,"mostly_sunny",15]        },
+  ]},
+  { country:"Spain",                flag:"🇪🇸", cities:[
+      { name:"Madrid",             cap:true, w:["sunny",20,"partly_cloudy",18] },
+      { name:"Barcelona",                    w:["sunny",21,"mostly_sunny",20]  },
+      { name:"Valencia",                     w:["sunny",22,"sunny",23]         },
+  ]},
+  { country:"Sweden",               flag:"🇸🇪", cities:[
+      { name:"Stockholm",          cap:true, w:["partly_cloudy",9,"showers",7] },
+      { name:"Gothenburg",                   w:["rainy",8,"cloudy",7]          },
+      { name:"Malmö",                        w:["cloudy",10,"rainy",9]         },
+  ]},
+  { country:"Switzerland",          flag:"🇨🇭", cities:[
+      { name:"Bern",               cap:true, w:["partly_cloudy",13,"sunny",14]       },
+      { name:"Zurich",                       w:["partly_cloudy",12,"rainy",11]       },
+      { name:"Geneva",                       w:["mostly_sunny",14,"partly_cloudy",13]},
+  ]},
+  { country:"Ukraine",              flag:"🇺🇦", cities:[
+      { name:"Kyiv",               cap:true, w:["partly_cloudy",12,"rainy",10]       },
+      { name:"Kharkiv",                      w:["cloudy",11,"cloudy",11]             },
+      { name:"Odesa",                        w:["mostly_sunny",15,"partly_cloudy",14]},
+  ]},
+  { country:"United Kingdom",       flag:"🇬🇧", cities:[
+      { name:"London",             cap:true, w:["showers",13,"cloudy",11] },
+      { name:"Birmingham",                   w:["rainy",11,"showers",10]  },
+      { name:"Manchester",                   w:["rainy",10,"cloudy",10]   },
+  ]},
+  { country:"Vatican City",         flag:"🇻🇦", cities:[
+      { name:"Vatican City",       cap:true, w:["sunny",19,"mostly_sunny",18] },
+      { name:"St. Peter's Sq.",              w:["sunny",19,"sunny",19]        },
+      { name:"Castel Gandolfo",              w:["mostly_sunny",18,"sunny",20] },
+  ]},
+];
+
+/* ── Render ─────────────────────────────────────────────────────────── */
+function renderCity(city) {
+    const td = C[city.w[0]], tm = C[city.w[2]];
+    return `<div class="city-col">
+        <div class="city-head">
+            <span class="city-name">${city.name}</span>
+            ${city.cap ? '<span class="cap-tag">Capital</span>' : ''}
+        </div>
+        <div class="days-row">
+            <div class="day-box">
+                <div class="day-lbl">Today</div>
+                <span class="day-ico">${td.e}</span>
+                <div class="day-tmp">${city.w[1]}°C</div>
+                <div class="day-cnd">${td.l}</div>
+            </div>
+            <div class="day-box">
+                <div class="day-lbl">Tomorrow</div>
+                <span class="day-ico">${tm.e}</span>
+                <div class="day-tmp">${city.w[3]}°C</div>
+                <div class="day-cnd">${tm.l}</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderEntry(entry) {
+    const cap = entry.cities.find(c => c.cap) || entry.cities[0];
+    const cond = C[cap.w[0]];
+    const temps = entry.cities.map(c => c.w[1]);
+    const lo = Math.min(...temps), hi = Math.max(...temps);
+    const tempStr = lo === hi ? `${lo}°C` : `${lo}–${hi}°C`;
+
+    return `<div class="country-block" onclick="this.classList.toggle('open')">
+        <div class="country-row">
+            <span class="flag">${entry.flag}</span>
+            <span class="cname">${entry.country}</span>
+            <div class="csummary">
+                <span class="cweather">${cond.e}</span>
+                <span class="ctemp">${tempStr}</span>
+            </div>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="cities-outer">
+            <div class="cities-inner">
+                <div class="cities-grid">
+                    ${entry.cities.map(renderCity).join('')}
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+let filtered = DATA.slice();
+
+function render() {
+    const el = document.getElementById('list');
+    const ctr = document.getElementById('counter');
+    el.innerHTML = filtered.length
+        ? filtered.map(renderEntry).join('')
+        : `<div class="empty"><div class="empty-ico">🌍</div><p>No countries found</p></div>`;
+    const n = filtered.length;
+    ctr.textContent = `${n} ${n === 1 ? 'country' : 'countries'}`;
+}
+
+document.getElementById('searchInput').addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    filtered = q ? DATA.filter(e => e.country.toLowerCase().includes(q)) : DATA.slice();
+    render();
+});
+
+render();
+</script>
+</body>
+</html>
